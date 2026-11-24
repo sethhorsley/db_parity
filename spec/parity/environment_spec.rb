@@ -25,6 +25,26 @@ RSpec.describe Parity::Environment do
     expect(backup).to have_received(:restore)
   end
 
+  it "restores from a local file when passed the --file flag" do
+    backup = stub_parity_backup
+    allow(Parity::Backup).to receive(:new).and_return(backup)
+
+    Parity::Environment.new(
+      "development",
+      ["restore", "production", "--file", "latest.dump"],
+    ).run
+
+    expect(Parity::Backup).to have_received(:new).
+      with(
+        from: "production",
+        to: "development",
+        parallelize: false,
+        additional_args: "",
+        file: "latest.dump",
+      )
+    expect(backup).to have_received(:restore)
+  end
+
   it "passes through arguments with correct quoting" do
     Parity::Environment.new(
       "production",

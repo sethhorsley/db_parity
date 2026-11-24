@@ -74,6 +74,7 @@ module Parity
           additional_args: additional_restore_arguments,
         }
         backup_args[:backup_id] = backup_id? if backup_id?
+        backup_args[:file] = backup_file if backup_file
         
         Backup.new(backup_args).restore
       end
@@ -100,9 +101,14 @@ module Parity
       end
     end
 
+    def backup_file
+      file_index = arguments.index("--file")
+      arguments[file_index + 1] if file_index
+    end
+
     def additional_restore_arguments
       # Filter out special flags that are handled separately
-      filtered_args = arguments.drop(1) - ["--force", "--parallelize"]
+      filtered_args = arguments.drop(1) - ["--force", "--parallelize", "--file", backup_file]
       # Filter out --backup-id as it's handled separately by the Backup class
       filtered_args = filtered_args.reject { |arg| arg.start_with?("--backup-id") }
       (filtered_args + [restore_confirmation_argument]).compact.join(" ")

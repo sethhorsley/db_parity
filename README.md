@@ -89,6 +89,12 @@ as a flag to the `development` or `production` commands:
     development restore-from production --parallelize
 ```
 
+To restore development from a backup file you already have (e.g. one downloaded
+with `heroku pg:backups:download`), pass `--file`. The file is not deleted:
+```
+    development restore-from production --file latest.dump
+```
+
 [2]: http://redis.io/commands
 
 Convention

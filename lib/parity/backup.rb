@@ -1,4 +1,5 @@
 require "etc"
+require "shellwords"
 
 module Parity
   class Backup
@@ -12,9 +13,14 @@ module Parity
       @additional_args = args[:additional_args] || BLANK_ARGUMENTS
       @parallelize = args[:parallelize] || false
       @backup_id = args[:backup_id]
+      @file = args[:file]
     end
 
     def restore
+      if file && to != DEVELOPMENT_ENVIRONMENT_KEY_NAME
+        raise ArgumentError, "--file can only restore to development"
+      end
+
       if to == DEVELOPMENT_ENVIRONMENT_KEY_NAME
         restore_to_development
       elsif from == DEVELOPMENT_ENVIRONMENT_KEY_NAME
@@ -26,12 +32,14 @@ module Parity
 
     private
 
-    attr_reader :additional_args, :from, :to, :parallelize, :backup_id
+    attr_reader :additional_args, :from, :to, :parallelize, :backup_id, :file
 
     alias_method :parallelize?, :parallelize
 
     def log_restore_info
-      if backup_id
+      if file
+        puts "Restoring from file #{file} to #{to}"
+      elsif backup_id
         puts "Restoring from #{from} backup ID: #{backup_id} to #{to}"
       else
         puts "Restoring from #{from} (latest backup) to #{to}"
@@ -51,12 +59,14 @@ module Parity
 
     def restore_to_development
       log_restore_info
-      ensure_temp_directory_exists
-      download_remote_backup
+      unless file
+        ensure_temp_directory_exists
+        download_remote_backup
+      end
       wipe_development_database
       create_heroku_ext_schema
       restore_from_local_temp_backup
-      delete_local_temp_backup
+      delete_local_temp_backup unless file
       delete_rails_production_environment_settings
       puts "Backup restoration to #{to} completed successfully!"
     end
@@ -108,9 +118,9 @@ module Parity
       puts "Restoring backup to #{development_db}..."
       # Filter out --backup-id from additional_args as it's not needed for pg_restore
       filtered_args = additional_args.gsub(/--backup-id\s+\S+/, "").strip
-      backup_filename = backup_id ? "#{backup_id}.backup" : "latest.backup"
+      backup_path = file ? Shellwords.escape(file) : "tmp/#{backup_id || "latest"}.backup"
       Kernel.system(
-        "pg_restore tmp/#{backup_filename} --verbose --no-acl --no-owner " \
+        "pg_restore #{backup_path} --verbose --no-acl --no-owner " \
           "--dbname #{development_db} --jobs=#{processor_cores} " \
           "#{filtered_args}"
       )

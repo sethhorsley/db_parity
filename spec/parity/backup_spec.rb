@@ -64,6 +64,37 @@ describe Parity::Backup do
         with(specific_backup_id_delete_local_temp_backup_command)
     end
 
+    it "restores a local file to development without downloading or deleting it" do
+      stub_const("Rails", Module.new)
+      allow(IO).to receive(:read).and_return(database_fixture)
+      allow(Kernel).to receive(:system)
+
+      Parity::Backup.new(
+        from: "production",
+        to: "development",
+        file: "/path with spaces/latest.dump",
+      ).restore
+
+      expect(Kernel).
+        to have_received(:system).
+        with(drop_development_database_drop_command)
+      expect(Kernel).
+        to have_received(:system).
+        with(
+          "pg_restore /path\\ with\\ spaces/latest.dump --verbose --no-acl " \
+            "--no-owner --dbname #{default_db_name} --jobs=1 ",
+        )
+      expect(Kernel).not_to have_received(:system).with(download_remote_database_command)
+      expect(Kernel).not_to have_received(:system).with(make_temp_directory_command)
+      expect(Kernel).not_to have_received(:system).with(/\Arm /)
+    end
+
+    it "refuses to restore a local file anywhere but development" do
+      expect {
+        Parity::Backup.new(from: "production", to: "staging", file: "latest.dump").restore
+      }.to raise_error(ArgumentError, /development/)
+    end
+
     it "restores backups to development with Rubies that do not support Etc.nprocessors" do
       allow(IO).to receive(:read).and_return(database_fixture)
       allow(Kernel).to receive(:system)
