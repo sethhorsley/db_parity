@@ -5,4 +5,4 @@ Releasing
 1. Create a new tag based on the version number
 1. Create a GitHub [release] for the latest tag
 
-[release]: https://github.com/thoughtbot/parity/releases
+[release]: https://github.com/sethhorsley/db_parity/releases

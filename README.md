@@ -8,13 +8,11 @@ Shell commands for development, staging, and production parity for Heroku apps.
 Install
 -------
 
-    gem install parity
+Bundle it in your project:
 
-Or bundle it in your project:
+    gem "db_parity", github: "sethhorsley/db_parity"
 
-    gem "parity"
-
-[releases]: https://github.com/thoughtbot/parity/releases
+[releases]: https://github.com/sethhorsley/db_parity/releases
 
 Parity requires these command-line programs:
 
@@ -137,7 +135,7 @@ Using feature environments requires including Parity as a gem in your
 application's Gemfile.
 
 ```ruby
-gem "parity"
+gem "db_parity", github: "sethhorsley/db_parity"
 ```
 
 [binstub]: https://github.com/sstephenson/rbenv/wiki/Understanding-binstubs
@@ -170,7 +168,7 @@ Please see [`CONTRIBUTING.md`](CONTRIBUTING.md) for details.
 Version History
 ---------------
 
-Please see the [releases page](https://github.com/thoughtbot/parity/releases)
+Please see the [releases page](https://github.com/sethhorsley/db_parity/releases)
 for the version history, along with a description of the changes in each
 release.
 
